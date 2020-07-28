@@ -194,6 +194,7 @@ rcl_subscription_init(
   goto cleanup;
 fail:
   if (subscription->impl) {
+    subscription->impl->options.rmw_subscription_options.rmw_specific_subscription_payload = NULL;
     allocator->deallocate(subscription->impl, allocator->state);
     subscription->impl = NULL;
   }
@@ -212,6 +213,11 @@ cleanup:
 rcl_ret_t
 rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_SUBSCRIPTION_INVALID);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_NODE_INVALID);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
+
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Finalizing subscription");
   rcl_ret_t result = RCL_RET_OK;
   RCL_CHECK_ARGUMENT_FOR_NULL(subscription, RCL_RET_SUBSCRIPTION_INVALID);
@@ -230,6 +236,8 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
       RCL_SET_ERROR_MSG(rmw_get_error_string().str);
       result = RCL_RET_ERROR;
     }
+    subscription->impl->rmw_handle = NULL;
+
     allocator.deallocate(subscription->impl, allocator.state);
     subscription->impl = NULL;
   }
@@ -465,6 +473,9 @@ rcl_subscription_get_publisher_count(
   const rcl_subscription_t * subscription,
   size_t * publisher_count)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_SUBSCRIPTION_INVALID);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
+
   if (!rcl_subscription_is_valid(subscription)) {
     return RCL_RET_SUBSCRIPTION_INVALID;
   }
