@@ -194,6 +194,7 @@ rcl_subscription_init(
 fail:
   if (subscription->impl) {
     allocator->deallocate(subscription->impl, allocator->state);
+    subscription->impl = NULL;
   }
   ret = fail_ret;
   // Fall through to cleanup
@@ -229,6 +230,7 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
       result = RCL_RET_ERROR;
     }
     allocator.deallocate(subscription->impl, allocator.state);
+    subscription->impl = NULL;
   }
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription finalized");
   return result;
