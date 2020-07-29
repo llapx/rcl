@@ -156,6 +156,7 @@ rcl_subscription_init(
   RCL_CHECK_FOR_NULL_WITH_MSG(
     subscription->impl, "allocating memory failed", ret = RCL_RET_BAD_ALLOC; goto cleanup);
   // Fill out the implemenation struct.
+
   // rmw_handle
   // TODO(wjwwood): pass allocator once supported in rmw api.
   subscription->impl->rmw_handle = rmw_create_subscription(
@@ -194,6 +195,7 @@ rcl_subscription_init(
 fail:
   if (subscription->impl) {
     allocator->deallocate(subscription->impl, allocator->state);
+    subscription->impl = NULL;
   }
   ret = fail_ret;
   // Fall through to cleanup
@@ -229,6 +231,7 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
       result = RCL_RET_ERROR;
     }
     allocator.deallocate(subscription->impl, allocator.state);
+    subscription->impl = NULL;
   }
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription finalized");
   return result;
