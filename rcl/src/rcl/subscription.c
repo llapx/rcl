@@ -72,7 +72,8 @@ rcl_subscription_init(
   rcutils_string_map_t substitutions_map = rcutils_get_zero_initialized_string_map();
   rcutils_ret_t rcutils_ret = rcutils_string_map_init(&substitutions_map, 0, rcutils_allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
-    RCL_SET_ERROR_MSG(rcutils_get_error_string().str);
+    // Error already set, no need to forward it.
+    // RCL_SET_ERROR_MSG(rcutils_get_error_string().str);
     if (RCUTILS_RET_BAD_ALLOC == rcutils_ret) {
       return RCL_RET_BAD_ALLOC;
     }
@@ -104,7 +105,8 @@ rcl_subscription_init(
     &expanded_topic_name);
   rcutils_ret = rcutils_string_map_fini(&substitutions_map);
   if (rcutils_ret != RCUTILS_RET_OK) {
-    RCL_SET_ERROR_MSG(rcutils_get_error_string().str);
+    // Error already set, no need to forward it.
+    // RCL_SET_ERROR_MSG(rcutils_get_error_string().str);
     ret = RCL_RET_ERROR;
     goto cleanup;
   }
@@ -141,7 +143,8 @@ rcl_subscription_init(
   int validation_result;
   rmw_ret_t rmw_ret = rmw_validate_full_topic_name(remapped_topic_name, &validation_result, NULL);
   if (rmw_ret != RMW_RET_OK) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    // Error already set, no need to forward it.
+    // RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     ret = RCL_RET_ERROR;
     goto cleanup;
   }
@@ -165,7 +168,8 @@ rcl_subscription_init(
     &(options->qos),
     &(options->rmw_subscription_options));
   if (!subscription->impl->rmw_handle) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    // Error already set, no need to forward it.
+    // RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     goto fail;
   }
   // get actual qos, and store it
@@ -173,7 +177,8 @@ rcl_subscription_init(
     subscription->impl->rmw_handle,
     &subscription->impl->actual_qos);
   if (RMW_RET_OK != rmw_ret) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    // Error already set, no need to forward it.
+    // RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     ret = RCL_RET_ERROR;
     goto fail;
   }
@@ -194,6 +199,7 @@ rcl_subscription_init(
 fail:
   if (subscription->impl) {
     allocator->deallocate(subscription->impl, allocator->state);
+    subscription->impl = NULL;
   }
   ret = fail_ret;
   // Fall through to cleanup
@@ -229,6 +235,7 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
       result = RCL_RET_ERROR;
     }
     allocator.deallocate(subscription->impl, allocator.state);
+    subscription->impl = NULL;
   }
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription finalized");
   return result;
@@ -269,7 +276,8 @@ rcl_take(
   rmw_ret_t ret = rmw_take_with_info(
     subscription->impl->rmw_handle, ros_message, &taken, message_info_local, allocation);
   if (ret != RMW_RET_OK) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    // Error already set, no need to forward it.
+    // RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return rcl_convert_rmw_ret_to_rcl_ret(ret);
   }
   RCUTILS_LOG_DEBUG_NAMED(
@@ -289,10 +297,6 @@ rcl_take_sequence(
   rmw_subscription_allocation_t * allocation
 )
 {
-  // Set the sizes to zero to indicate that there are no valid messages
-  message_sequence->size = 0u;
-  message_info_sequence->size = 0u;
-
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription taking %zu messages", count);
   if (!rcl_subscription_is_valid(subscription)) {
     return RCL_RET_SUBSCRIPTION_INVALID;  // error message already set
@@ -310,12 +314,17 @@ rcl_take_sequence(
     return RCL_RET_INVALID_ARGUMENT;
   }
 
+  // Set the sizes to zero to indicate that there are no valid messages
+  message_sequence->size = 0u;
+  message_info_sequence->size = 0u;
+
   size_t taken = 0u;
   rmw_ret_t ret = rmw_take_sequence(
     subscription->impl->rmw_handle, count, message_sequence, message_info_sequence, &taken,
     allocation);
   if (ret != RMW_RET_OK) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    // Error already set, no need to forward it.
+    // RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return rcl_convert_rmw_ret_to_rcl_ret(ret);
   }
   RCUTILS_LOG_DEBUG_NAMED(
@@ -348,7 +357,8 @@ rcl_take_serialized_message(
   rmw_ret_t ret = rmw_take_serialized_message_with_info(
     subscription->impl->rmw_handle, serialized_message, &taken, message_info_local, allocation);
   if (ret != RMW_RET_OK) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    // Error already set, no need to forward it.
+    // RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return rcl_convert_rmw_ret_to_rcl_ret(ret);
   }
   RCUTILS_LOG_DEBUG_NAMED(
@@ -370,6 +380,7 @@ rcl_take_loaned_message(
   if (!rcl_subscription_is_valid(subscription)) {
     return RCL_RET_SUBSCRIPTION_INVALID;  // error already set
   }
+  RCL_CHECK_ARGUMENT_FOR_NULL(loaned_message, RCL_RET_INVALID_ARGUMENT);
   if (*loaned_message) {
     RCL_SET_ERROR_MSG("loaned message is already initialized");
     return RCL_RET_INVALID_ARGUMENT;
@@ -383,7 +394,8 @@ rcl_take_loaned_message(
   rmw_ret_t ret = rmw_take_loaned_message_with_info(
     subscription->impl->rmw_handle, loaned_message, &taken, message_info_local, allocation);
   if (ret != RMW_RET_OK) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    // Error already set, no need to forward it.
+    // RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return rcl_convert_rmw_ret_to_rcl_ret(ret);
   }
   RCUTILS_LOG_DEBUG_NAMED(
