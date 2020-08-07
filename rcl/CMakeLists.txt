@@ -122,7 +122,7 @@ if(BUILD_TESTING)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DRCUTILS_ENABLE_FAULT_INJECTION")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRCUTILS_ENABLE_FAULT_INJECTION")
   endif()
-    
+
   add_subdirectory(test)
 endif()
 

@@ -107,7 +107,7 @@ if(BUILD_TESTING)
   function(custom_test_c target)
     ament_add_gtest(
       "${target}${target_suffix}" ${ARGN}
-      TIMEOUT 60
+      TIMEOUT 180
       ENV
       RCL_ASSERT_RMW_ID_MATCHES=${rmw_implementation}
       RMW_IMPLEMENTATION=${rmw_implementation}
