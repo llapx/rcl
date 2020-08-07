@@ -118,6 +118,11 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
+  if(NOT RCUTILS_DISABLE_FAULT_INJECTION)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DRCUTILS_ENABLE_FAULT_INJECTION")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRCUTILS_ENABLE_FAULT_INJECTION")
+  endif()
+    
   add_subdirectory(test)
 endif()
 
